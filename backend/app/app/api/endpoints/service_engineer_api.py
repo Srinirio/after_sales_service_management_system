@@ -92,7 +92,7 @@ async def materialRequest(
     checkTicketBelongsToHim(db=db,ticket_id=ticket_id,current_user=current_user)
     return createMaterialRequest(db=db,ticket_id=ticket_id,current_user=current_user,material_id=material_id,units=units)
 
-@router.post("/service_engineer/add_work_report")
+@router.post("/service_engineer/add_work_report",response_model=Message)
 async def workReport(
                     db: Annotated[Session, Depends(get_db)],
                     current_user: Annotated[User, Depends(get_current_user)],
@@ -108,7 +108,7 @@ async def workReport(
             )
     return createWorkReport(db=db,current_user=current_user,data_in=data_in)
 
-@router.put("/service_engineer/{ticket_id}/completed")
+@router.put("/service_engineer/{ticket_id}/completed",response_model=Message)
 async def updateTicketStatusToCompleted(
                     db: Annotated[Session, Depends(get_db)],
                     current_user: Annotated[User, Depends(get_current_user)],

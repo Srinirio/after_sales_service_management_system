@@ -374,7 +374,59 @@ async def ticketReport(
                      engineer_price: Annotated[int , Query(...)]
 ):
     return createReport(db=db,ticket_id=ticket_id,engineer_charge=engineer_price)
+
+@router.get("/super_user/admin/dashboard",response_model=DashboardResponse)
+async def adminDashboard(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_superuser)
+):
+    current_year = datetime.now().year
+    current_month = datetime.now().month
+    total_tickets = db.query(
+        extract('month', Ticket.created_at).label('month'),
+        func.count(Ticket.id).label('total_tickets')
+    ).filter(
+        extract('year', Ticket.created_at) == current_year,
+        extract('month', Ticket.created_at) <= current_month  
+    ).group_by(
+        extract('month', Ticket.created_at)
+    ).all()
+
+    completed_tickets = db.query(
+        extract('month', Ticket.created_at).label('month'),
+        func.count(Ticket.id).label('completed_tickets')
+    ).join(TicketStatus).filter(
+        TicketStatus.status_of_ticket == True,
+        extract('year', Ticket.created_at) == current_year,
+        extract('month', Ticket.created_at) <= current_month  
+    ).group_by(
+        extract('month', Ticket.created_at)
+    ).all()
     
+    in_process_tickets = []
+    for i in range(len(completed_tickets)):
+        this_tuple = (completed_tickets[i][0],total_tickets[i][1]-completed_tickets[i][1])
+        in_process_tickets.append(this_tuple)
+
+    dummy_data = {}
+    for month in range(1, current_month + 1):
+        dummy_data[month] = {
+            "total_tickets": 0,
+            "completed_tickets": 0,
+            "in_process_tickets": 0
+        }            
+
+    for row in total_tickets:
+        dummy_data[row[0]]["total_tickets"] = row[1]
+
+    for row in completed_tickets:
+        dummy_data[row[0]]["completed_tickets"] = row[1]  
+   
+    for row in in_process_tickets:
+        dummy_data[row[0]]["in_process_tickets"] = row[1]
+
+    return DashboardResponse(month_wise_report=dummy_data)  
+
 
         
     

@@ -216,19 +216,6 @@ async def showMaterialForTicket(
         list_of_items.append(ticket_data)
     return list_of_items
 
-# @router.get("/service_head/show_travel_expense")
-# async def showTravelExpense(
-#                     db: Annotated[Session, Depends(get_db)],
-#                     current_user: Annotated[User, Depends(get_current_service_head)],
-# ):
-#     emp_ids = db.query(User.id).filter(User.report_to == current_user.id).all()
-#     list_of_employee_ids = [data[0] for data in emp_ids]
-    
-#     expense = db.query(
-#         Expense.description,
-#         Expense.amount,
-#         Expense.ticket_id
-#     ).all()
 
 @router.get("/service_head/tickets/travel_expenses",response_model=list[ExpenseDetailsOut])
 async def show_expenses_for_tickets(
@@ -298,7 +285,7 @@ async def show_expenses_for_tickets(
 
 
 
-@router.put("/service_head/tickets/travel_expenses/{expense_id}/approve")
+@router.put("/service_head/tickets/travel_expenses/{expense_id}/approve",response_model=Message)
 async def show_expenses_for_tickets(*,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_service_head),

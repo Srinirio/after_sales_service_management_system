@@ -28,4 +28,11 @@ class TicketStatusResponse(BaseModel):
 
     class Config:
         orm_mode = True 
-    
+
+class TicketCounts(BaseModel):
+    total_tickets: int
+    completed_tickets: int
+    in_process_tickets: int
+
+class DashboardResponse(BaseModel):
+    month_wise_report: dict[int, TicketCounts]
