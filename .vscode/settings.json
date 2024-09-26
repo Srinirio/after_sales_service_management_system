@@ -1,0 +1,10 @@
+{
+    "cSpell.words": [
+        "backref",
+        "fastapi",
+        "joinedload",
+        "passlib",
+        "pydantic",
+        "sqlalchemy"
+    ]
+}
