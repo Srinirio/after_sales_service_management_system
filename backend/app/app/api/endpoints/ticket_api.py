@@ -9,6 +9,9 @@ router = APIRouter()
 
 @router.post("/create/ticket",response_model=Message)
 async def createTicket(data_in: TicketIn, db: Annotated[Session, Depends(get_db)]):
+    """
+    Here, Customer can create the ticket by given their details(This open API)
+    """
     ticket_data = Ticket(
         **data_in.dict()
     )

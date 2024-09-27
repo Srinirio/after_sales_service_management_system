@@ -16,7 +16,7 @@ async def createTicketByHead(
                             data_in: TicketIn  
 ):
     """
-    Admin and Service head can create ticket
+    Here, Service head can create ticket
     """
     ticket_data = Ticket(
         **data_in.dict(),
@@ -69,7 +69,7 @@ async def showAllTicket(
                         current_user: Annotated[User, Depends(get_current_service_head)]
 ):
     """
-    Here, Admin and Service head can see the ticket's 
+    Here, Service head can see the ticket's which are not assigned
     """
     db_data = db.query(Ticket).outerjoin(
         AssigningTicket,
@@ -89,6 +89,9 @@ async def empUnderServiceHead(
                      db: Annotated[Session, Depends(get_db)],
                      current_user: Annotated[User, Depends(get_current_service_head)]
 ): 
+    """
+    Here , Service head can see all the employee under him
+    """
     return db.query(User).filter(User.report_to == current_user.id).all()
 
 
@@ -99,6 +102,9 @@ async def assignTicket(
                      employee_id: Annotated[str, Query(...)],
                      ticket_id: Annotated[int, Query(...)]
 ):
+    """
+    here , service engineer can assign the unassign ticket to their service engineer under him
+    """
     checkEmployeeUnderHead(db=db,employee_id=employee_id,service_head=current_user)
     checkTicket(db=db,ticket_id=ticket_id)
     return assignTicketToEmp(db=db,employee_id=employee_id,service_head=current_user,ticket_id=ticket_id)
@@ -108,6 +114,9 @@ async def statusUnderMyTickets(
                      db: Annotated[Session, Depends(get_db)],
                      current_user: Annotated[User, Depends(get_current_service_head)]
 ):
+    """
+    Here, service head can see all the details of tickets under him
+    """
     emp_ids = db.query(User.id).filter(User.report_to == current_user.id).all()
     list_of_employee_ids = [data[0] for data in emp_ids]
 
@@ -158,6 +167,9 @@ async def showSingleTicketStatus(
                      current_user: Annotated[User, Depends(get_current_service_head)],
                      ticket_id: int
 ):
+    """
+    Here, Service head can see the details of particular ticket
+    """
     checkTicketUnderHead(db=db,current_user=current_user,ticket_id=ticket_id)
     return getSingleTicketStatus(db=db,ticket_id=ticket_id)
 
@@ -167,6 +179,9 @@ async def showWorkReportToHead(
                     current_user: Annotated[User, Depends(get_current_service_head)],
                     emp_id: str
 ):
+    """
+    Here, service head can see the work report of particular employee
+    """
     emp_data = db.query(User).filter(and_(User.id == emp_id,User.report_to == current_user.id)).first()
     if not emp_data:
         raise HTTPException(
@@ -187,6 +202,9 @@ async def showMaterialForTicket(
                     current_user: Annotated[User, Depends(get_current_service_head)],
                     ticket_id: int
 ):
+    """
+    Here, the Service Head to view the materials requested for a specific ticket under him
+    """
     checkTicketUnderHead(db=db,current_user=current_user,ticket_id=ticket_id)
 
     db_ticket = db.query(
@@ -222,7 +240,9 @@ async def show_expenses_for_tickets(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_service_head)
 ):
-   
+    """
+    Here, Service head can see the travel expense of his employee
+    """
     emp_ids = db.query(User.id).filter(User.report_to == current_user.id).all()
     list_of_employee_ids = [data[0] for data in emp_ids]
     
@@ -291,6 +311,9 @@ async def show_expenses_for_tickets(*,
     current_user: User = Depends(get_current_service_head),
     expense_id: int
 ):
+    """
+    Here, service head can approve the travel expense under his employee
+    """
     emp_ids = db.query(User.id).filter(User.report_to == current_user.id).all()
     list_of_employee_ids = [data[0] for data in emp_ids]
     
@@ -312,11 +335,4 @@ async def show_expenses_for_tickets(*,
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Already approved")
     
     return updateExpense(db=db,expense_in=db_expense,updater=current_user)
-    
-
-
-
-
-    
-    
     

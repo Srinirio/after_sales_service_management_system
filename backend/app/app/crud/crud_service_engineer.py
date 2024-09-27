@@ -90,12 +90,13 @@ def createWorkReport(db: Session,
     if db_work.created_at.date() + timedelta(days=1) != data_in.created_at:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Please missing work report :{db_work.created_at.date()+timedelta(days=1)}"
+            detail=f"Please fill the missing work report first:{db_work.created_at.date()+timedelta(days=1)}"
         )
     create_work_report = WorkReport(
             description = data_in.description,
             ticket_id = data_in.ticket_id,
-            emp_id = current_user.id
+            emp_id = current_user.id,
+            created_at = data_in.created_at
         )
     db.add(create_work_report)
     db.commit()

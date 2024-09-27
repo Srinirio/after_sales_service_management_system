@@ -14,6 +14,9 @@ async def viewTickets(
                      db: Annotated[Session, Depends(get_db)],
                      current_user: Annotated[User, Depends(get_current_user)]
 ):
+    """
+    Here, service engineer can see the tickets assigned to him
+    """
     db_data = db.query(
         Ticket
     ).join(
@@ -36,7 +39,7 @@ async def createTicketStatus(
     priority: Annotated[int, Form(...,ge=1,le=3)]
 ):
     """
-    here we add expected date to complete and priority for the particular ticket
+    here ,Service engineer can add expected date to complete and priority for the particular ticket
     
     - **Expected date to complete**: required
     - **Priority**: 1-> High , 2-> medium, 3-> low
@@ -65,6 +68,9 @@ async def expense(
                  amount: Annotated[float, Form(...)],
                  image: Annotated[UploadFile | None, File()] = None
 ):
+    """
+    Here, Service can add travel expense for the particular ticket
+    """
     checkTicketBelongsToHim(db=db,ticket_id=ticket_id,current_user=current_user)
     return createExpense(db=db,ticket_id=ticket_id,
                                description=description,amount=amount,
@@ -75,6 +81,9 @@ async def getMaterials(
                        db: Annotated[Session, Depends(get_db)],
                        current_user: Annotated[User, Depends(get_current_user)],
 ):
+    """
+    Here, service engineer can see all the materials
+    """
     db_material = db.query(Material.id,Material.material_name).all()
     if not db_material:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No materials")
@@ -89,6 +98,9 @@ async def materialRequest(
                          material_id: Annotated[int, Body(...)],
                          units: Annotated[int, Body(...)]
 ):
+    """
+    Here, service engineer can make a material request to his ticket
+    """
     checkTicketBelongsToHim(db=db,ticket_id=ticket_id,current_user=current_user)
     return createMaterialRequest(db=db,ticket_id=ticket_id,current_user=current_user,material_id=material_id,units=units)
 
@@ -98,7 +110,11 @@ async def workReport(
                     current_user: Annotated[User, Depends(get_current_user)],
                     data_in: WorkReportIn
 ):
-    
+    """
+    - A Service Engineer can submit their work report for the current day.
+    - If this is the employee's first work report, it will be accepted without issues.
+    - If the employee is submitting their second work report, there is a validation to ensure that any pending work reports for previous days are submitted first.
+    """
     if data_in.ticket_id is not None:
         checkTicketBelongsToHim(db=db,ticket_id=data_in.ticket_id,current_user=current_user)
         db_ticket_status = db.query(TicketStatus).filter(TicketStatus.ticket_id == data_in.ticket_id).one_or_none()
@@ -114,6 +130,9 @@ async def updateTicketStatusToCompleted(
                     current_user: Annotated[User, Depends(get_current_user)],
                     ticket_id: int
 ):
+    """
+    Here, service engineer can update the completed status of his ticket
+    """
     checkTicketBelongsToHim(db=db,ticket_id=ticket_id,current_user=current_user)
     db_ticket_status = db.query(TicketStatus).filter(TicketStatus.ticket_id == ticket_id).one_or_none()
     if not db_ticket_status:

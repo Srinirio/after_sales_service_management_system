@@ -21,7 +21,7 @@ async def create(
     - **Password**: Required
     - **Destination Id**: Required(1-> Admin, 2-> Service Head, 3-> Service Employee)
     - **phone number**: Required/ Should be 10 digit
-    - **Report to**: Can be null/you can't give report to person destination to (the user you created) eg-report-to-person: **20IT001(ADMIN)**
+    - **Report to**: Can be null/you can't give report to person destination to (the user you created) eg-report-to-person-Id: **20IT001(ADMIN)**
     """
     # check email is unique
     user = getUserByEmail(db=db, email=data_in.email)
@@ -77,7 +77,7 @@ async def updateAllDetails(
 ): 
     """
     **Here admin can edit already exists employee**
-    
+    - **Employee id**: Required
     - **name**:(Not required)
     - **email**:(Not required)
     - **password**:(Not required)
@@ -152,6 +152,9 @@ async def showWorkReportToHead(
                     current_user: Annotated[User, Depends(get_current_active_superuser)],
                     emp_id: str
 ):
+    """
+    Here , Admin can see the work report for the specific employee eg: emp_id = **20IT001**
+    """
     emp_data = getEmpById(db=db,id=emp_id)
     if not emp_data:
         raise HTTPException(
@@ -172,6 +175,9 @@ async def createMaterial(
                         current_user: Annotated[User ,Depends(get_current_active_superuser)],
                         material_in: MaterialIn 
 ):
+    """
+    Here, Admin can create a material , which the material can request by service engineer
+    """
     material_create = Material(**material_in.dict())
     db.add(material_create)
     db.commit()
@@ -182,18 +188,28 @@ async def getMaterialsAdmin(
                        db: Annotated[Session, Depends(get_db)],
                        current_user: Annotated[User, Depends(get_current_active_superuser)],
 ):
+    """
+    Here , Admin can see the materials , which the materials are created by him
+    """
     db_material = db.query(Material.id,Material.material_name,Material.amount).all()
     if not db_material:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No materials")
     return db_material
 
-@router.put("/super_user/{material_id}/update",response_model=Message)
+@router.put("/super_user/{material_id}/update/",response_model=Message)
 async def updateMaterialAdmin(
                        db: Annotated[Session, Depends(get_db)],
                        current_user: Annotated[User, Depends(get_current_active_superuser)],
                        material_id: int,
                        material_in: MaterialUpdateIn 
 ):
+    """
+    Here , Admin can update the material 
+    - **material_id** : (Required)
+    - **material_name** : (Not Required)
+    - **amount** : (Not Required)
+
+    """
     db_material = db.query(Material).filter(Material.id == material_id).one_or_none()
     if not db_material:
         raise HTTPException(
@@ -217,7 +233,7 @@ async def createTicketByHead(
                             data_in: TicketIn  
 ):
     """
-    Admin can create ticket
+    Here, Admin can create ticket
     """
     ticket_data = Ticket(
         **data_in.dict(),
@@ -251,6 +267,9 @@ async def adminAssignTicket(
                             employee_id: str,
                             ticket_id: int
 ):
+    """
+    Here, Admin can assign a ticket to service engineer
+    """
     checkValidEmpAndServiceEngineerOrNot(db=db, emp_id=employee_id)
     checkTicket(db=db,ticket_id=ticket_id)
     return assignTicketToEmp(db=db,employee_id=employee_id,service_head=current_user,ticket_id=ticket_id)
@@ -262,7 +281,9 @@ async def getDetailsOfSingleTicket(
                            current_user: Annotated[User, Depends(get_current_active_superuser)],
                            ticket_id: Annotated[int, Path(...)]
 ):
-    
+    """
+    Here , Admin can see A to Z details of ticket, by (ticket id)
+    """
     return getSingleTicketStatus(db=db,ticket_id=ticket_id)
         
 
@@ -272,7 +293,9 @@ async def showMaterialForTicket(
                     current_user: Annotated[User, Depends(get_current_active_superuser)],
                     ticket_id: int
 ):
-
+    """
+    here, Admin can see the requested items of particular ticket_id
+    """
     db_ticket = db.query(
         Ticket.id,
         Material.material_name,
@@ -288,7 +311,7 @@ async def showMaterialForTicket(
     if not db_ticket:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Ticket not found"
+            detail="No material requests"
         )
     
     list_of_items = []
@@ -305,6 +328,9 @@ async def showTravelExpenses(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_active_superuser)]
 ):
+    """
+    Here, admin can see all the expense details of each ticket [expense id, expense details, amount, approved status , approved user]
+    """
     employee_user = aliased(User)
     approver_user = aliased(User)
 
@@ -320,7 +346,7 @@ async def showTravelExpenses(
         employee_user, employee_user.id == Expense.emp_id  
     ).outerjoin(
         approver_user, approver_user.id == Expense.approved_by  
-    ).all()
+    ).order_by(Expense.ticket_id.desc()).all()
 
     if not db_expenses:
         raise HTTPException(status_code=404, detail="No expense details found")
@@ -358,6 +384,9 @@ async def approveExpense(
                        current_user: Annotated[User, Depends(get_current_active_superuser)],
                        expense_id: int
 ):
+    """
+    Here, admin can approve the expense by provide expense_id
+    """
     db_expense_status = db.query(Expense).filter(Expense.id == expense_id).one_or_none()
     
     if not db_expense_status:
@@ -373,6 +402,9 @@ async def ticketReport(
                      ticket_id: int,
                      engineer_price: Annotated[int , Query(...)]
 ):
+    """
+    Here, admin can get the ticket report - In PDF format
+    """
     return createReport(db=db,ticket_id=ticket_id,engineer_charge=engineer_price)
 
 @router.get("/super_user/admin/dashboard",response_model=DashboardResponse)
@@ -380,6 +412,9 @@ async def adminDashboard(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_superuser)
 ):
+    """
+    Here, Admin can see the no of tickets created in each month, no of tickets completed in each month, no of tickets in_process in each month
+    """
     current_year = datetime.now().year
     current_month = datetime.now().month
     total_tickets = db.query(

@@ -13,6 +13,8 @@ class EmployeeIn(BaseModel):
     def validate_phone_number(cls, value: str):
         if not value.isdigit():
             raise ValueError('Phone number must contain only digits')
+        if value[0]!='9' and value[0]!='8' and value[0]!='7' and value[0]!='6':
+            raise ValueError('Phone number should start with 6 7 8 9')
         return value
     
 class UserResponse(BaseModel):
@@ -31,7 +33,7 @@ class UpdateUserIn(BaseModel):
     email: EmailStr | None = None
     password: str | None = None
     destination_id: int | None = None
-    phone_number: str | None = Field(...,max_length=10,min_length=10)
+    phone_number: str | None = Field(None,max_length=10,min_length=10)
     report_to: str | None = None
     is_active: bool | None = None
     
@@ -39,6 +41,7 @@ class UpdateUserIn(BaseModel):
     def validate_phone_number(cls, value: str):
         if not value.isdigit():
             raise ValueError('Phone number must contain only digits')
+        if value[0]!='9' and value[0]!='8' and value[0]!='7' and value[0]!='6':            raise ValueError('Phone number should start with 6 7 8 9')
         return value
     
 class EmployeeUnderHeadResponse(BaseModel):
@@ -57,6 +60,8 @@ class EmployeeInUnderHead(BaseModel):
     def validate_phone_number(cls, value: str):
         if not value.isdigit():
             raise ValueError('Phone number must contain only digits')
+        if value[0]!='9' and value[0]!='8' and value[0]!='7' and value[0]!='6':
+            raise ValueError('Phone number should start with 6 7 8 9')
         return value
     
 

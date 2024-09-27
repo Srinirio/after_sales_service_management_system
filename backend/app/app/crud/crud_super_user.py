@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session,joinedload
+from sqlalchemy.orm import Session
 from sqlalchemy import and_,or_
 from sqlalchemy.orm import aliased
 from models import *
@@ -96,9 +96,7 @@ def updateUser(db: Session, update_user_in: UpdateUserIn, exists_user_data: User
             )
         exists_user_data.destination_id = update_user_in.destination_id
     if update_user_in.password is not None:
-        print(update_user_in.password)
         exists_user_data.password = get_password_hash(update_user_in.password)
-    
     if update_user_in.phone_number is not None:
         exists_user_data.phone_number = update_user_in.phone_number
     if update_user_in.report_to is not None:
@@ -190,6 +188,3 @@ def getAllEmployeeByDestination(db: Session,destination_id_in: int):
      
     return all_employee
 
-"""
-
-"""
