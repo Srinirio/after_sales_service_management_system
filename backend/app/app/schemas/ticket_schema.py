@@ -36,3 +36,14 @@ class TicketCounts(BaseModel):
 
 class DashboardResponse(BaseModel):
     month_wise_report: dict[int, TicketCounts]
+    
+class TicketsEngineerOut(BaseModel):
+    company_name: str
+    address: str
+    description: str
+    id: int
+    created_at: datetime
+    status_of_ticket: bool | None = None
+
+    class Config:
+        orm_mode = True

@@ -9,7 +9,7 @@ from datetime import *
 
 router = APIRouter()
 
-@router.get("/service_engineer/view/my_tickets",response_model=list[TicketsOut] | str)
+@router.get("/service_engineer/view/my_tickets",response_model=list[TicketsEngineerOut] | str)
 async def viewTickets(
                      db: Annotated[Session, Depends(get_db)],
                      current_user: Annotated[User, Depends(get_current_user)]
@@ -18,13 +18,22 @@ async def viewTickets(
     Here, service engineer can see the tickets assigned to him
     """
     db_data = db.query(
-        Ticket
+        Ticket.company_name,
+        Ticket.address,
+        Ticket.description,
+        Ticket.company_name,
+        Ticket.id,
+        Ticket.created_at,
+        TicketStatus.status_of_ticket
     ).join(
         AssigningTicket,
         AssigningTicket.ticket_id == Ticket.id
+    ).outerjoin(
+        TicketStatus,
+        TicketStatus.ticket_id == Ticket.id 
     ).filter(
         AssigningTicket.assigned_to_emp_id == current_user.id
-    ).order_by(AssigningTicket.id,AssigningTicket.created_at).all()
+    ).order_by(AssigningTicket.id.desc(),AssigningTicket.created_at.desc()).all()
     
     if db_data:
         return db_data
@@ -146,7 +155,7 @@ async def updateTicketStatusToCompleted(
             detail="Ticket status is already completed"
         )
     db_ticket_status.status_of_ticket = True
-    db_ticket_status.expected_date_to_complete = datetime.now()
+    db_ticket_status.completed_date = datetime.now()
     db.add(db_ticket_status)
     db.commit()
     return {"message":"Ticket status is completed !!"}
